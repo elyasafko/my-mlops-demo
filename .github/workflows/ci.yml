@@ -8,29 +8,46 @@ on:
 jobs:
   train-and-package:
     runs-on: ubuntu-latest
+
+    env:                     # 👈 job-wide variables
+      BUCKET_NAME: mlops-demo-registry-379478996241
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
     steps:
+      # 1. Checkout repo
       - name: 🛎️  Checkout code
         uses: actions/checkout@v4
 
+      # 2. Enable Docker Buildx
       - name: 🐳  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 3. Build the training image
       - name: 🔨  Build training image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.train
           tags: mlops-demo/train:latest
-          load: true          # load image into the runner for next step
+          load: true       # load into runner for next step
 
+      # 4. Run training container (creates model.pt in workspace)
       - name: 🚂  Run training container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace mlops-demo/train:latest \
-            && echo "model.pt produced"
+          docker run --rm -v ${{ github.workspace }}:/workspace mlops-demo/train:latest
+          echo "Model produced: $(stat -c%s model.pt) bytes"
 
-      - name: 📦  Upload model.pt artifact
-        uses: actions/upload-artifact@v4
+      # 5. Configure AWS credentials for CLI
+      - name: ☁️  Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: model-pt
-          path: model.pt
-          retention-days: 5
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      # 6. Upload model.pt to the S3 registry bucket
+      - name: ⬆️  Upload model.pt to S3
+        run: |
+          TS=$(date +'%Y-%m-%dT%H-%M-%S')
+          aws s3 cp model.pt "s3://${{ env.BUCKET_NAME }}/$TS/model.pt"
+          echo "Uploaded to s3://${{ env.BUCKET_NAME }}/$TS/model.pt"
