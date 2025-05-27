@@ -1,0 +1,11 @@
+# Virtual env & caches
+.venv/
+__pycache__/
+
+# Dataset & artifacts
+data/
+model.pt
+
+# IDE junk
+.idea/
+.vscode/
