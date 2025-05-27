@@ -31,13 +31,15 @@ jobs:
           tags: mlops-demo/train:latest
           load: true       # load into runner for next step
 
-      # 4. Run training container (creates model.pt in workspace)
+      # 4. Run training container (writes model.pt into host workspace)
       - name: 🚂  Run training container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace mlops-demo/train:latest
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            mlops-demo/train:latest
           echo "Model produced: $(stat -c%s model.pt) bytes"
 
-      # 5. Configure AWS credentials for CLI
+      # 5. Configure AWS credentials
       - name: ☁️  Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -45,9 +47,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      # 6. Upload model.pt to the S3 registry bucket
+      # 6. Upload to S3
       - name: ⬆️  Upload model.pt to S3
         run: |
           TS=$(date +'%Y-%m-%dT%H-%M-%S')
           aws s3 cp model.pt "s3://${{ env.BUCKET_NAME }}/$TS/model.pt"
-          echo "Uploaded to s3://${{ env.BUCKET_NAME }}/$TS/model.pt"
+
