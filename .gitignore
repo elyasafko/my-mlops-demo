@@ -9,3 +9,4 @@ model.pt
 # IDE junk
 .idea/
 .vscode/
+.env
