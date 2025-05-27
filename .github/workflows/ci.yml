@@ -1,0 +1,36 @@
+name: CI – train model
+
+on:
+  push:
+    branches: [main, feat/**]
+  pull_request:
+
+jobs:
+  train-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️  Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨  Build training image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.train
+          tags: mlops-demo/train:latest
+          load: true          # load image into the runner for next step
+
+      - name: 🚂  Run training container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace mlops-demo/train:latest \
+            && echo "model.pt produced"
+
+      - name: 📦  Upload model.pt artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-pt
+          path: model.pt
+          retention-days: 5
