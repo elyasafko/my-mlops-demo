@@ -1,8 +1,9 @@
+# alb.tf
 resource "aws_lb" "alb" {
   name               = "${var.project}-alb"
   internal           = false
   load_balancer_type = "application"
-  subnets            = data.aws_subnet_ids.default.ids
+  subnets            = data.aws_subnets.public.ids
 }
 
 resource "aws_lb_target_group" "tg" {

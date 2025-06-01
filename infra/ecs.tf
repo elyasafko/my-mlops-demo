@@ -1,3 +1,4 @@
+# ecs.tf
 resource "aws_ecs_cluster" "cluster" {
   name = "${var.project}-cluster"
 }
@@ -8,8 +9,8 @@ resource "aws_ecs_task_definition" "infer" {
   memory                   = "512"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn       = aws_iam_role.task_exec_role.arn
-  task_role_arn            = aws_iam_role.task_role.arn
+  execution_role_arn       = aws_iam_role.task_exec.arn
+  task_role_arn            = aws_iam_role.task.arn
 
   container_definitions = jsonencode([{
     name      = "infer"
@@ -39,7 +40,7 @@ resource "aws_ecs_service" "infer_svc" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = [data.aws_subnet_ids.default.ids[0]]   # simplest: use default VPC first subnet
+    subnets         = data.aws_subnets.public.ids
     assign_public_ip = true
   }
 
