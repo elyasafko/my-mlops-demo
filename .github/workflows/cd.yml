@@ -39,6 +39,9 @@ jobs:
           push: true
           tags: ${{ secrets.ECR_REPO }}:latest
 
+      # --- Terraform ---
+      - name: Terraform init
+        run: terraform -chdir=infra init -input=false
+
       - name: Terraform apply
         run: terraform -chdir=infra apply -auto-approve
-
