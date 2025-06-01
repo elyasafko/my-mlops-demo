@@ -31,5 +31,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
+      # NEW: log in to ECR
+      - name: Authenticate Docker to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # build + push inference image
+      - name: Build & push inference image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.infer
+          push: true
+          tags: ${{ secrets.ECR_REPO }}:latest
+          
       - name: Terraform apply
         run: terraform -chdir=infra apply -auto-approve
