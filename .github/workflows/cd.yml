@@ -41,7 +41,7 @@ jobs:
 
       # --- Terraform ---
       - name: Terraform init
-        run: terraform -chdir=infra init -input=false -reconfigure
+        run: terraform -chdir=infra init -input=false
 
       - name: Terraform apply
         run: terraform -chdir=infra apply -auto-approve

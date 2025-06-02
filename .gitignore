@@ -10,3 +10,4 @@ model.pt
 .idea/
 .vscode/
 .env
+infra/terraform.tfstate*
